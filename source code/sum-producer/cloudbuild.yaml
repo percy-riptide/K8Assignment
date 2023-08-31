@@ -1,0 +1,46 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/percy-k8s-csci5709/kubernetes-registry/sum_producer:latest', '.']
+
+  # Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/percy-k8s-csci5709/kubernetes-registry/sum_producer:latest']
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'container'
+      - 'clusters'
+      - 'get-credentials'
+      - 'k8s-standard-cluster'
+      - '--zone'
+      - 'us-central1-c'
+      - '--project'
+      - 'percy-k8s-csci5709'
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['delete', 'service', 'sum-producer', '--ignore-not-found=true']
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1-c'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=k8s-standard-cluster'
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['delete', 'pod', 'sum-producer-pod', '--ignore-not-found=true']
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1-c'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=k8s-standard-cluster'
+  
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', './manifest.yaml']
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1-c'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=k8s-standard-cluster'
+
+images:
+  - 'us-central1-docker.pkg.dev/percy-k8s-csci5709/kubernetes-registry/sum_producer:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

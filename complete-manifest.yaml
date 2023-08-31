@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-pvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: request-validator-pod
+  labels:
+    app: request-validator
+spec:
+  containers:
+  - name: request-validator
+    image: gcr.io/percy-k8s-csci5709/request_validator:latest
+    volumeMounts:
+    - name: data-volume
+      mountPath: "/Pratik_PV_dir/"
+    ports:
+    - containerPort: 6000
+      hostPort: 6000
+  volumes:
+  - name: data-volume
+    persistentVolumeClaim:
+      claimName: shared-pvc
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sum-producer-pod
+  labels:
+    app: sum-producer
+spec:
+  containers:
+  - name: sum-producer
+    image: gcr.io/percy-k8s-csci5709/sum_producer:latest
+    volumeMounts:
+    - name: data-volume
+      mountPath: "/Pratik_PV_dir/"
+    ports:
+    - containerPort: 6001
+      hostPort: 6001
+  volumes:
+  - name: data-volume
+    persistentVolumeClaim:
+      claimName: shared-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: request-validator
+spec:
+  selector:
+    app: request-validator
+  ports:
+    - protocol: TCP
+      port: 6000
+      targetPort: 6000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sum-producer
+spec:
+  selector:
+    app: sum-producer
+  ports:
+    - protocol: TCP
+      port: 6001
+      targetPort: 6001
+  type: LoadBalancer
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-pod1-communication
+spec:
+  podSelector:
+    matchLabels:
+      app: request-validator
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: sum-producer
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: sum-producer
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-pod2-communication
+spec:
+  podSelector:
+    matchLabels:
+      app: sum-producer
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: request-validator
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: request-validator

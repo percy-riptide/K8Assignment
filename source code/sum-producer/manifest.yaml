@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-pvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sum-producer-pod
+  labels:
+    app: sum-producer
+spec:
+  containers:
+  - name: sum-producer
+    image: us-central1-docker.pkg.dev/percy-k8s-csci5709/kubernetes-registry/sum_producer:latest
+    volumeMounts:
+    - name: data-volume
+      mountPath: "/Pratik_PV_dir/"
+    ports:
+    - containerPort: 6001
+      hostPort: 6001
+  volumes:
+  - name: data-volume
+    persistentVolumeClaim:
+      claimName: shared-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sum-producer
+spec:
+  selector:
+    app: sum-producer
+  ports:
+    - protocol: TCP
+      port: 6001
+      targetPort: 6001
+  type: LoadBalancer
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-pod2-communication
+spec:
+  podSelector:
+    matchLabels:
+      app: sum-producer
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: request-validator
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: request-validator

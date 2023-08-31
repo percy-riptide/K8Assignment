@@ -1,0 +1,61 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+
+# Build files
+dist/
+build/
+out/
+
+# Environment files
+.env
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+
+# Testing frameworks
+/coverage
+
+# Output of npm pack
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Production build
+/build/
+
+# Next.js
+.next/
+out/
+
+# Nest.js
+/dist/
+/.cache/
+
+# Nuxt.js
+.nuxt/
+
+# Typescript
+*.tsbuildinfo
+*.js.map
+
+# Visual Studio Code Workspace Settings
+.code-workspace
+
+# Mac-specific
+.DS_Store
+
+# Windows-specific
+Thumbs.db
